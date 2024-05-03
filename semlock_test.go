@@ -100,7 +100,7 @@ func TestSemaphoreLock(t *testing.T) {
 
 	t.Run(`all goroutine must finish`, func(t *testing.T) {
 		wg := sync.WaitGroup{}
-		wg.Add(50)
+		wg.Add(500)
 		s := NewMaxSemaphoreLock(5, 1*time.Millisecond)
 		count := int32(0)
 		for range 500 {
