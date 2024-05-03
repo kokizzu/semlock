@@ -8,7 +8,44 @@ eg. when database overload we want to decrease number of query hitting database,
 
 ## How it works
 
-this struct will ensure `min` <= `allowed` <= `max`, and `active` <= `allowed`, if `active` > `allowed`, `BlockUntilAllowed()` will block indefinitely until `active` < `allowed`, number of `active` can be decreased by calling `ReleaseActive()`, number of `allowed` cab be increased or decreased by calling `IncAllowed()` or `DecAllowed()`
+- `allowed` is number of available locks, can be manipulated by calling `IncAllowed()` or `DecAllowed()`
+- `active` is number of locks that given to the worker, can be manipulated by calling `BlockUntilAllowed()` or `ReleaseActive()`
+- `min` (default 1) and `max` is the minimum and maximum threshold for `allowed`
+
+the `SemaphoreLock` struct will ensure `min` <= `allowed` <= `max`, and `active` <= `allowed`
+
+if `active` >= `allowed` (rate limit exceeded), `BlockUntilAllowed()` (acquire lock) will block indefinitely until locks available (`active` < `allowed`)
+
+lock can be released (decreasing number of `active`) by calling `ReleaseActive()`
+
+number of available locks (number of `allowed`) can be increased or decreased by calling `IncAllowed()` or `DecAllowed()`
+
+```
+Example: MinSemaphoreLock, L=lock acquired/active, A=available lock/allowed
+
+   min=1 max=3 available=1
+   [A] [ ] [ ]
+
+   thread1: BlockUntilAllowed() // will pass
+   [L] [ ] [ ]
+
+   thread2: BlockUntilAllowed() // will block
+   [L] [ ] [ ]
+
+   thread3: IncAllowed()
+   [L] [A] [ ]
+   thread2 continued
+   [L] [L] [ ]
+
+   thread3: IncAllowed()
+   [L] [L] [A]
+
+   thread1: ReleaseActive()
+   [L] [A] [A]
+
+   thread2: releaseActive()
+   [A] [A] [A]
+```
 
 ## Usage
 
