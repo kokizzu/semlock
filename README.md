@@ -11,8 +11,8 @@ eg. when database overload we want to decrease number of query hitting database 
 ## How it works
 
 - `allowed` is number of available locks, can be manipulated by calling `IncAllowed()` or `DecAllowed()`
-- `active` is number of locks that given to the worker, can be manipulated by calling `BlockUntilAllowed()` or `ReleaseActive()`
-- `min` (default 1) and `max` is the minimum and maximum threshold for `allowed`
+- `active` is number of locks that releaseed to the worker, can be manipulated by calling `BlockUntilAllowed()` (active+1) or `ReleaseActive()` (active-1)
+- `min` (default 1) and `max` is the minimum and maximum threshold for `allowed`, used to make sure it wont overflow (too many worker, eg. when `allowed` increased too much) or underflow (no more worker can be activated, eg. when `allowed` < 1).
 
 the `SemaphoreLock` struct will ensure `min` <= `allowed` <= `max`, and `active` <= `allowed`
 
@@ -59,7 +59,7 @@ import "github.com/kokizzu/semlock"
 func _() {
     // MinSemaphoreLock will start with allowed=1
     // MaxSemaphoreLock will start with allowed=max
-    // maximum 10 concurrent tasks, 100ms delay before try acquire lock again
+    // maximum 10 concurrent tasks, 100ms delay before trying to acquire lock again
     s := semlock.NewMinSemaphoreLock(10, 100 * time.Millisecond)
     
     for range 10 { // maximum 10 worker
@@ -68,7 +68,6 @@ func _() {
                 // block until acquire lock (active+1)
                 s.BlockUntilAllowed() // will block if active >= allowed
                 
-                // do expensive query or process
                 expensiveQueryOrCalculation(item)
                 
                 // release lock (active-1)
@@ -93,4 +92,4 @@ func _() {
 
 ## TODO
 
-- replace `WaitDelay` with channel so doesn't have to do polling, but if we do that, `max` limit can be no longer dynamic.
+- replace `WaitDelay` with channel so doesn't have to do polling, but if we do that, `max` limit can be no longer modified after initialization unless we use infinite channel.
