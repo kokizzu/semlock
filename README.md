@@ -1,10 +1,12 @@
 
 # SemLock
 
-a simple semaphore lock, difference between built-in semaphore, the limit can be updated dynamically.
-example use case to dynamically limit the number of concurrent tasks, 
-eg. when database overload we want to decrease number of query hitting database, 
-  or when CPU/RAM/Bandwidth used by something else, we may want to decrease the number of worker
+a simple semaphore lock, difference between built-in `sync/semaphore`: the limit can be updated dynamically, difference with worker pool libraries: this package can be used to increase or reduce number of goroutine running at the same time in after initialization.
+
+example use case to dynamically limit the number of concurrent tasks
+
+eg. when database overload we want to decrease number of query hitting database or when CPU/RAM/Bandwidth overloaded, we may want to decrease the number of worker.
+
 
 ## How it works
 
@@ -47,7 +49,7 @@ Example: MinSemaphoreLock, L=lock acquired/active, A=available lock/allowed
    [A] [A] [A]
 ```
 
-## Usage
+## Usage Example
 
 ```go
 package main
@@ -78,9 +80,9 @@ func _() {
     for {
         select {
             case <- cpuOverloaded, <- databaseOverloadedSignal:
-                s.DecAllowed()
+                s.DecAllowed() // reduce number of goroutine allowed to progress
             case <- cpuLessHalfIdle, <- databaseLessHalfIdleSignal:
-                s.IncAllowed()
+                s.IncAllowed() // increase number of allowed goroutine progressing
             case <- ctx.Done():
                 close(someChannel)
                 return
@@ -91,4 +93,4 @@ func _() {
 
 ## TODO
 
-- replace WaitDelay with channel so doesn't have to do polling, but if we do that, max can be no longer dynamic.
+- replace `WaitDelay` with channel so doesn't have to do polling, but if we do that, `max` limit can be no longer dynamic.
