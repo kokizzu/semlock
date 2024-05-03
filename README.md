@@ -62,14 +62,14 @@ func _() {
     // maximum 10 concurrent tasks, 100ms delay before try acquire lock again
     s := semlock.NewMinSemaphoreLock(10, 100 * time.Millisecond)
     
-    for _ = range 10 { // maximum 10 worker
+    for range 10 { // maximum 10 worker
         go func() {
-            for bla := range someChannel {
+            for item := range someChannel {
                 // block until acquire lock (active+1)
                 s.BlockUntilAllowed() // will block if active >= allowed
                 
                 // do expensive query or process
-                expensiveQueryOrCalculation(bla)
+                expensiveQueryOrCalculation(item)
                 
                 // release lock (active-1)
                 s.ReleaseActive() 
