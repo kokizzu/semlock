@@ -1,11 +1,11 @@
 
 # SemLock
 
-a simple semaphore lock, difference between built-in `sync/semaphore`: the limit can be updated dynamically, difference with worker pool libraries: this package can be used to increase or reduce number of goroutine running at the same time in after initialization.
+a simple semaphore lock, difference between built-in `sync/semaphore`: the limit can be updated dynamically, difference with worker pool libraries: this package can be used to increase or decrease number of goroutine running at the same time in after initialization.
 
-example use case to dynamically limit the number of concurrent tasks
+the use case for this library to dynamically limit the number of concurrent tasks adaptively
 
-eg. when database overload we want to decrease number of query hitting database or when CPU/RAM/Bandwidth overloaded, we may want to decrease the number of worker.
+eg. when database overload we want to decrease number of query hitting database for example based on latency or when CPU/RAM/Bandwidth overloaded, we may want to decrease the number of worker and increase it back when no longer overloaded.
 
 
 ## How it works
